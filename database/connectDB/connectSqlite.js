@@ -11,6 +11,8 @@ module.exports = async function () {
 	const userModel = require("../models/sqlite/user.js")(sequelize);
 	const dashBoardModel = require("../models/sqlite/userDashBoard.js")(sequelize);
 	const globalModel = require("../models/sqlite/global.js")(sequelize);
+	const bankModel = require("../models/sqlite/bank.js")(sequelize);
+	const staiHistoryModel = require("../models/sqlite/staiHistory.js")(sequelize);
 
 	await sequelize.sync({ force: false });
 
@@ -19,6 +21,8 @@ module.exports = async function () {
 		userModel,
 		dashBoardModel,
 		globalModel,
+		bankModel,
+		staiHistoryModel,
 		sequelize
 	};
 };
