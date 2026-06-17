@@ -3,7 +3,7 @@ module.exports.config = {
   version: "3.0",
   author: "MOHAMMAD AKASH",
   role: 0,
-  category: "economy",
+  category: "Game",
   shortDescription: "Casino betting game"
 };
 
