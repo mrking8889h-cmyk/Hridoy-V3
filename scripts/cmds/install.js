@@ -69,7 +69,7 @@ module.exports = {
     role: 2,
     hasPrefix: false,
     description: "Install command via reply / code / url",
-    category: "owner"
+    category: "Admin"
   },
 
   onStart: async function ({ args, message, event, api }) {
