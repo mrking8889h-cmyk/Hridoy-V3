@@ -171,7 +171,7 @@ module.exports = async function (databaseType, userModel, api, fakeGraphql) {
 
 	function getNameInDB(userID) {
 		const userData = global.db.allUserData.find(u => u.userID == userID);
-		if (userData)
+		if (userData && userData.name)
 			return userData.name;
 		else
 			return null;
@@ -185,15 +185,20 @@ module.exports = async function (databaseType, userModel, api, fakeGraphql) {
 			});
 		}
 
-		if (checkData)
-			return getNameInDB(userID);
+		if (checkData) {
+			const name = getNameInDB(userID);
+			return name || `User ${userID}`;
+		}
 
 		try {
 			const user = await axios.post(`https://www.facebook.com/api/graphql/?q=${`node(${userID}){name}`}`);
-			return user.data[userID].name;
+			if (user.data && user.data[userID] && user.data[userID].name) {
+				return user.data[userID].name;
+			}
+			return getNameInDB(userID) || `User ${userID}`;
 		}
 		catch (error) {
-			return getNameInDB(userID);
+			return getNameInDB(userID) || `User ${userID}`;
 		}
 	}
 
@@ -219,6 +224,14 @@ module.exports = async function (databaseType, userModel, api, fakeGraphql) {
 	}
 
 	async function create_(userID, userInfo) {
+		// Skip userID 0 (unreact events from Facebook API)
+		if (!userID || userID === 0 || userID === '0') {
+			return Promise.reject(new CustomError({
+				name: "INVALID_USER_ID",
+				message: `Cannot create user data for userID: ${userID}`
+			}));
+		}
+
 		const findInCreatingData = creatingUserData.find(u => u.userID == userID);
 		if (findInCreatingData)
 			return findInCreatingData.promise;
@@ -238,16 +251,24 @@ module.exports = async function (databaseType, userModel, api, fakeGraphql) {
 					});
 				}
 				userInfo = userInfo || (await api.getUserInfo(userID))[userID];
+				if (!userInfo) {
+					throw new CustomError({
+						name: "USER_INFO_NOT_FOUND",
+						message: `Cannot get user info for userID: ${userID}`
+					});
+				}
 				let userData = {
 					userID,
-					name: userInfo.name,
-					gender: userInfo.gender,
-					vanity: userInfo.vanity,
+					name: userInfo.name || `User ${userID}`,
+					gender: userInfo.gender || 0,
+					vanity: userInfo.vanity || null,
 					exp: 0,
 					money: 0,
 					banned: {},
 					settings: {},
-					data: {}
+					data: {},
+					premium: false,
+					premiumRequests: []
 				};
 				userData = await save(userID, userData, "create");
 				resolve_(_.cloneDeep(userData));
