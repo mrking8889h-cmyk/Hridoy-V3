@@ -6,7 +6,7 @@ module.exports = {
     config: {
         name: "autolink",
         version: "1.3",
-        author: "MOHAMMAD AKASH",
+        author: "Hridoy",
         role: 0,
         shortDescription: "Auto-download videos via Akash-video-downloader API",
         category: "Media",
@@ -60,7 +60,7 @@ module.exports = {
 
                 await api.sendMessage(
                     {
-                        body: `📥 Video downloaded successfully\n━━━━━━━━━━━━━━━`,
+                        body: `📥 Here's Your Video Baby..`,
                         attachment: fs.createReadStream(tempFile)
                     },
                     threadID,
