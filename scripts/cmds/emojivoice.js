@@ -8,7 +8,7 @@ module.exports = {
   config: {
     name: "emojivoice",
     version: "2.0.3",
-    author: "MOHAMMAD AKASH",
+    author: "Hridoy",
     countDown: 5,
     role: 0,
     shortDescription: "Sends a cute girl's voice when an emoji is used 😍",
@@ -25,17 +25,17 @@ module.exports = {
     const { body } = event;
 
     // === ON / OFF COMMAND HANDLING ===
-    if (body.toLowerCase().startsWith(".emojivoice")) {
+    if (body.toLowerCase().startsWith("emojivoice")) {
       const commandArgs = body.slice(11).trim().toLowerCase();
 
       if (commandArgs === "on") {
         isEmojiVoiceEnabled = true;
-        return message.reply("✅ Emoji Voice System চালু করা হয়েছে।\nএখন ইমোজি পাঠালে ভয়েস আসবে 😍");
+        return message.reply("✅ Emoji Voice System চালু করা হয়েছে।");
       }
 
       if (commandArgs === "off") {
         isEmojiVoiceEnabled = false;
-        return message.reply("❌ Emoji Voice System বন্ধ করা হয়েছে।\nইমোজি দিয়ে আর ভয়েস আসবে না।");
+        return message.reply("❌ Emoji Voice System বন্ধ করা হয়েছে।");
       }
 
       // Help message
