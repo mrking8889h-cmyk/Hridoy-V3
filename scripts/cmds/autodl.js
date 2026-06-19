@@ -2,85 +2,88 @@ const axios = require("axios");
 const fs = require("fs-extra");
 const path = require("path");
 
-const getBaseUrl = async () => {
-  try {
-    const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
-    return base.data.mahmud;
-  } catch (e) {
-    return "https://mahmud-global-apis.onrender.com"; 
-  }
-};
+const supportedDomains = [
+  "facebook.com", "fb.watch",
+  "youtube.com", "youtu.be",
+  "tiktok.com",
+  "instagram.com", "instagr.am",
+  "likee.com", "likee.video",
+  "capcut.com",
+  "spotify.com",
+  "terabox.com",
+  "twitter.com", "x.com",
+  "drive.google.com",
+  "soundcloud.com",
+  "ndown.app",
+  "pinterest.com", "pin.it"
+];
 
 module.exports = {
   config: {
     name: "autodl",
-    version: "1.7",
-    author: "MahMUD",
-    countDown: 0,
+    version: "2.0",
+    author: "Saimx69x",
     role: 0,
-    category: "Media",
-    guide: {
-      en: "[just send the video link]",
-    },
+    shortDescription: "All-in-one video/media downloader",
+    longDescription:
+      "Automatically downloads videos or media from Facebook, YouTube, TikTok, Instagram, Likee, CapCut, Spotify, Terabox, Twitter, Google Drive, SoundCloud, NDown, Pinterest, and more.",
+    category: "Utility",
+    guide: { en: "Just send any supported media link (https://) to auto-download." }
   },
 
-  onStart: async function () {},
+  onStart: async function({ api, event }) {
+    api.sendMessage(
+      "📥 Send a video/media link (https://) from any supported site (YouTube, Facebook, TikTok, Instagram, Likee, CapCut, Spotify, Terabox, Twitter, Google Drive, SoundCloud, NDown, Pinterest, etc.) to auto-download.",
+      event.threadID,
+      event.messageID
+    );
+  },
 
-  onChat: async function ({ api, event }) {
-      const obfuscatedAuthor = String.fromCharCode(77, 97, 104, 77, 85, 68); 
-        if (module.exports.config.author !== obfuscatedAuthor) {
-        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
-     }
-    
-        if (!event.body) return;
-        const supportedSites = /https?:\/\/(www\.)?(vt\.tiktok\.com|tiktok\.com|facebook\.com|fb\.watch|instagram\.com|youtu\.be|youtube\.com|x\.com|twitter\.com|vm\.tiktok\.com)/gi;
-        if (supportedSites.test(event.body)) {
-        const links = event.body.match(/https?:\/\/\S+/gi);
-        if (!links) return;
-        const link = links[0];
+  onChat: async function({ api, event }) {
+    const content = event.body ? event.body.trim() : "";
+    if (content.toLowerCase().startsWith("auto")) return;
+    if (!content.startsWith("https://")) return;
+    if (!supportedDomains.some(domain => content.includes(domain))) return;
 
-        let platform = "𝚄𝚗𝚔𝚗𝚘𝚠𝚗";
-        if (link.includes("facebook.com") || link.includes("fb.watch")) platform = "𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤";
-        else if (link.includes("instagram.com")) platform = "𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦";
-        else if (link.includes("tiktok.com")) platform = "𝐓𝐢𝐤𝐓𝐨𝐤";
-        else if (link.includes("youtube.com") || link.includes("youtu.be")) platform = "𝐘𝐨𝐮𝐓𝐮𝐛𝐞";
-        else if (link.includes("x.com") || link.includes("twitter.com")) platform = "𝐗 (𝐓𝐰𝐢𝐭𝐭𝐞𝐫)";
+    api.setMessageReaction("⌛️", event.messageID, () => {}, true);
 
-     
-        const cacheDir = path.join(__dirname, "cache");
-        const filePath = path.join(cacheDir, `autodl_${Date.now()}.mp4`);
-        try { api.setMessageReaction("⏳", event.messageID, () => {}, true);
-        if (!fs.existsSync(cacheDir)) {
-        fs.mkdirSync(cacheDir, { recursive: true });
-      }
+    try {
+      const API = `https://xsaim8x-xxx-api.onrender.com/api/auto?url=${encodeURIComponent(content)}`;
+      const res = await axios.get(API);
 
-        const base = await getBaseUrl();
-        const apiUrl = `${base}/api/download/video?link=${encodeURIComponent(link)}`;
-        const response = await axios({
-          method: 'get',
-          url: apiUrl,
-          responseType: 'arraybuffer',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-          }
-        });
+      if (!res.data) throw new Error("No response from API");
 
-        fs.writeFileSync(filePath, Buffer.from(response.data));
-        if (fs.statSync(filePath).size < 1000) {
-        throw new Error("Invalid video data.");
-      }
+      const mediaURL = res.data.high_quality || res.data.low_quality;
+      const mediaTitle = res.data.title || "Unknown Title";
+      if (!mediaURL) throw new Error("Media not found");
 
-        api.setMessageReaction("✅", event.messageID, () => {}, true);
-        const msgBody = `• 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦: ${platform}\n• 𝐇𝐞𝐫𝐞'𝐬 𝐲𝐨𝐮𝐫 𝐯𝐢𝐝𝐞𝐨 𝐛𝐚𝐛𝐲 <😘`;
-        return api.sendMessage( { body: msgBody,
-        attachment: fs.createReadStream(filePath) },
-        event.threadID, () => { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); },  event.messageID );
+      const extension = mediaURL.includes(".mp3") ? "mp3" : "mp4";
+      const buffer = (await axios.get(mediaURL, { responseType: "arraybuffer" })).data;
+      const filePath = path.join(__dirname, "cache", `auto_media_${Date.now()}.${extension}`);
 
-      } catch (err) {
-        console.error("AutoDL Error:", err.message);
-        api.setMessageReaction("❌", event.messageID, () => {}, true);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      }
+      await fs.ensureDir(path.dirname(filePath));
+      fs.writeFileSync(filePath, Buffer.from(buffer));
+
+      api.setMessageReaction("✅️", event.messageID, () => {}, true);
+      
+      const domain = supportedDomains.find(d => content.includes(d)) || "Unknown Platform";
+      const platformName = domain.replace(/(\.com|\.app|\.video|\.net)/, "").toUpperCase();
+
+      const infoCard = 
+`
+╭─╼━━━━━━━━╾─╮
+│ Title      : ${mediaTitle}
+│ Platform   : ${platformName}
+╰─━━━━━━━━━╾─╯`;
+
+      api.sendMessage(
+        { body: infoCard, attachment: fs.createReadStream(filePath) },
+        event.threadID,
+        () => fs.unlinkSync(filePath),
+        event.messageID
+      );
+    } catch {
+      api.setMessageReaction("❌️", event.messageID, () => {}, true);
     }
-  },
+  }
 };
