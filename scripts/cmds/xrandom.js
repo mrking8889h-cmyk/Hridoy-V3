@@ -146,4 +146,4 @@ module.exports.onStart = async function ({ event, api, args }) {
 			loadInfo.messageID
 		);
 	}
-};<
+};
