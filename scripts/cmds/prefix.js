@@ -192,7 +192,7 @@ Group: ${groupPrefix}`
     }
 
     if (body === ".") {
-      return message.reply("🎀>ιт'ѕ ʝυѕт му ρяєƒιχ");
+      return message.reply("Hala eda amr prefix🐍🔪");
     }
   }
 };
